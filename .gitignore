@@ -1,0 +1,19 @@
+node_modules/
+dist/
+build/
+.next/
+target/
+__pycache__/
+venv/
+*.log
+.DS_Store
+
+# Environment variables — never commit these
+.env
+.env.local
+.env.*.local
+
+# Prisma
+backend/prisma/migrations/*.db
+*.db
+*.db-journal

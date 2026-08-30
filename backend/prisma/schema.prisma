@@ -1,0 +1,100 @@
+// Prisma Schema for Clinic Appointment Scheduling System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String           @id @default(uuid())
+  email             String           @unique
+  passwordHash      String
+  name              String
+  role              String           // "front-desk" | "provider"
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  // Relations
+  primarySlots      Slot[]           @relation("SchedulingProvider")
+  supportingSlots   CareTeam[]       @relation("SupportingProvider")
+  visitNotes        VisitNote[]      @relation("VisitNoteAuthor")
+  auditLogs         AuditLog[]       @relation("AuditLogPerformer")
+  alertDismissals   AlertDismissal[] @relation("DismissingUser")
+}
+
+model Slot {
+  id                 String           @id @default(uuid())
+  providerId         String
+  provider           User             @relation("SchedulingProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  startTime          DateTime
+  durationMinutes    Int
+  status             String           @default("Available") // "Available" | "Requested" | "Confirmed" | "CheckedIn" | "Completed" | "NoShow" | "Cancelled"
+  isArchived         Boolean          @default(false)
+  patientName        String?          // Nullable until booked (Requested)
+  cancellationReason String?          // Nullable until Cancelled
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  // Relations
+  careTeam           CareTeam[]       @relation("SlotCareTeam")
+  visitNotes         VisitNote[]      @relation("SlotVisitNotes")
+  auditLogs          AuditLog[]       @relation("SlotAuditLogs")
+  alertDismissals    AlertDismissal[] @relation("SlotAlertDismissals")
+
+  // Indexes for high performance searches and filters
+  @@index([providerId])
+  @@index([startTime])
+  @@index([status])
+  @@index([isArchived])
+}
+
+model CareTeam {
+  slotId     String
+  slot       Slot     @relation("SlotCareTeam", fields: [slotId], references: [id], onDelete: Cascade)
+  providerId String
+  provider   User     @relation("SupportingProvider", fields: [providerId], references: [id], onDelete: Cascade)
+  assignedAt DateTime @default(now())
+
+  @@id([slotId, providerId])
+  @@index([providerId])
+}
+
+model VisitNote {
+  id        String   @id @default(uuid())
+  slotId    String
+  slot      Slot     @relation("SlotVisitNotes", fields: [slotId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation("VisitNoteAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  noteText  String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slotId])
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  slotId        String
+  slot          Slot     @relation("SlotAuditLogs", fields: [slotId], references: [id], onDelete: Cascade)
+  eventType     String   // "status_change" | "note_added" | "care_team_change" | "cancellation"
+  eventData     Json     // Stores details (old/new status, metadata)
+  performedById String
+  performedBy   User     @relation("AuditLogPerformer", fields: [performedById], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([slotId])
+}
+
+model AlertDismissal {
+  slotId      String
+  slot        Slot     @relation("SlotAlertDismissals", fields: [slotId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation("DismissingUser", fields: [userId], references: [id], onDelete: Cascade)
+  dismissedAt DateTime @default(now())
+
+  @@id([slotId, userId])
+}
