@@ -106,3 +106,28 @@ Split the check into two parts: (1) a Prisma query to find candidates whose `sta
 ### What you corrected
 Nothing required correction. All tests passed cleanly.
 
+---
+
+## Session 3: Appointment lifecycle state machine
+
+### Prompt
+"Implement the appointment status lifecycle: Available→Requested→Confirmed→CheckedIn→Completed. Allow Confirmed→NoShow only after scheduled time. Cancellation only before check-in and requires a reason. Reject invalid transitions server-side with clear errors."
+
+### What you got
+A `src/routes/appointments.js` file with one endpoint per transition action. Each endpoint validates current status, enforces RBAC, checks the NoShow time guard and cancellation reason requirement, updates the slot record, and writes an immutable audit log entry.
+
+### What you corrected
+Nothing required correction. All lifecycle tests passed on the first run.
+
+---
+
+## Session 3: Test fixture slot-conflict bug
+
+### Prompt
+"Write a comprehensive supertest test suite covering all lifecycle transitions, care team, and notes."
+
+### What you got (initially wrong)
+The test helper used `Date.now() + 24h` as a fixed start time for every slot. Multiple describe blocks calling `createSlot` for the same provider caused conflict-409 rejections, returning `undefined`, which cascaded into 28 `TypeError: Cannot read properties of undefined (reading 'id')` failures.
+
+### What you corrected
+Added a module-level monotonic counter. Each `createSlot` call now uses `24 + counter * 2` hours from now, giving every slot a distinct 2-hour window. Production conflict-detection logic was not changed.

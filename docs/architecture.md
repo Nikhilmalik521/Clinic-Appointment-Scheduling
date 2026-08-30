@@ -13,6 +13,20 @@
    - `PUT /api/slots/:id` — edit unbooked slots; providers restricted to own
    - `POST /api/slots/:id/archive` — front-desk only; soft-removes from schedule
    - `POST /api/slots/:id/restore` — front-desk only; un-archives slot
+   - `GET /api/appointments` — role-scoped list (providers see own + supported)
+   - `GET /api/appointments/:id` — single appointment with care team
+   - `POST /api/appointments/:id/request` — Available→Requested; requires patientName
+   - `POST /api/appointments/:id/confirm` — Requested→Confirmed (front-desk)
+   - `POST /api/appointments/:id/checkin` — Confirmed→CheckedIn (front-desk)
+   - `POST /api/appointments/:id/complete` — CheckedIn→Completed (provider or front-desk)
+   - `POST /api/appointments/:id/noshow` — Confirmed→NoShow; only after scheduled time (front-desk)
+   - `POST /api/appointments/:id/cancel` — requires reason; blocked after CheckedIn (front-desk)
+   - `GET /api/appointments/:id/history` — immutable audit log in chronological order
+   - `POST /api/appointments/:id/care-team` — add supporting provider (front-desk)
+   - `DELETE /api/appointments/:id/care-team/:providerId` — remove supporting provider (front-desk)
+   - `GET /api/appointments/:id/notes` — list visit notes (front-desk or associated provider)
+   - `POST /api/appointments/:id/notes` — add note (provider only; must be scheduling or supporting)
+   - `PUT /api/appointments/note/:noteId` — edit note (author only)
 3. **Database (Persistence)**: PostgreSQL hosted on Neon, managed through the Prisma ORM tool. It handles foreign key checks, uniqueness constraints, and stores data transactionally.
 
 **Communication**:

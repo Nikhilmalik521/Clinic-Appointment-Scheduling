@@ -8,6 +8,8 @@ const request = require('supertest');
 const app = require('../src/index');
 const prisma = require('../src/lib/prisma');
 
+jest.setTimeout(30000); // Neon cold-start can take several seconds
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const uid = () => Math.random().toString(36).slice(2, 8);
 
