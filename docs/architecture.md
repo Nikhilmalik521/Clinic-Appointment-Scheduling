@@ -3,8 +3,17 @@
 ### What are the moving pieces, and how do they talk to each other?
 
 1. **Client Application (Frontend)**: Built in React (Vite). It captures user actions, performs basic client-side routing and validation, and renders standard HTML views styled via custom Vanilla CSS rules.
-2. **Web API Service (Backend)**: Built using Node.js and Express. It receives requests, authorizes users via JWT verification, executes role-based controls, runs the appointment state machine checks, and queries/modifies the database.
-3. **Database (Persistence)**: PostgreSQL hosted on Supabase, managed through the Prisma ORM tool. It handles foreign key checks, uniqueness constraints, and stores data transactionally.
+2. **Web API Service (Backend)**: Built using Node.js and Express. It receives requests, verifies JWT tokens via `authenticate` middleware, checks role permissions via `authorize` middleware, runs the appointment state machine checks, and queries/modifies the database. Implemented routes so far:
+   - `POST /api/auth/register` — bcrypt password hashing + JWT issuance
+   - `POST /api/auth/login` — credential verification + JWT issuance
+   - `GET /api/auth/me` — token-protected profile fetch
+   - `POST /api/slots` — front-desk only; creates slots with conflict checking
+   - `GET /api/slots` — scoped by role (providers see only own slots)
+   - `GET /api/slots/:id` — single slot fetch with ownership check for providers
+   - `PUT /api/slots/:id` — edit unbooked slots; providers restricted to own
+   - `POST /api/slots/:id/archive` — front-desk only; soft-removes from schedule
+   - `POST /api/slots/:id/restore` — front-desk only; un-archives slot
+3. **Database (Persistence)**: PostgreSQL hosted on Neon, managed through the Prisma ORM tool. It handles foreign key checks, uniqueness constraints, and stores data transactionally.
 
 **Communication**:
 - The client talks to the backend via asynchronous JSON/HTTP requests (`fetch` or `axios`). All API requests carry a Bearer JWT token in the `Authorization` header after login.

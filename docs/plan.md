@@ -26,7 +26,7 @@ This order ensures that any backend-enforced constraints are verified early, pre
 *Estimates to be updated dynamically during development.*
 
 - **Session 1**: Estimated 2 hours. Actual: ~2.5 hours (extra time due to Prisma migration non-interactive environment issue, and switching from TypeScript to JavaScript per preference).
-- **Session 2**: Estimated 2 hours. Actual: 
+- **Session 2**: Estimated 2 hours. Actual: ~1.5 hours (auth + RBAC + slot CRUD + 28 passing tests).
 - **Session 3**: Estimated 2.5 hours. Actual: 
 - **Session 4**: Estimated 2 hours. Actual: 
 - **Session 5**: Estimated 2 hours. Actual: 

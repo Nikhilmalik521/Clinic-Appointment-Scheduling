@@ -53,3 +53,56 @@ A working `src/index.js` with Express, CORS middleware, JSON body parsing, /api/
 
 ### What you corrected
 The initial attempt to background-start the server with `&` failed on Windows PowerShell (ampersand operator not supported in PowerShell). Corrected to use `node -e "require('./src/index.js'); setTimeout(...)"` which confirmed the server boots on port 5000 correctly.
+
+---
+
+## Session 2: Auth middleware (JWT verification)
+
+### Prompt
+"Create a JWT authentication middleware for Express that extracts a Bearer token from the Authorization header, verifies it, and attaches the decoded payload to req.user."
+
+### What you got
+A clean `authenticate.js` middleware that checks for the `Bearer ` prefix, calls `jwt.verify()`, and returns 401 for missing or invalid tokens.
+
+### What you corrected
+Nothing required correction. The middleware worked correctly in the first test run.
+
+---
+
+## Session 2: RBAC middleware
+
+### Prompt
+"Create a role-based authorization middleware factory that accepts a list of allowed roles and returns a middleware returning 403 if req.user.role is not in the list."
+
+### What you got
+`authorize(...allowedRoles)` factory that returns an Express middleware. Returns 401 if req.user is absent, 403 if role is not in the allowed list.
+
+### What you corrected
+Nothing required correction.
+
+---
+
+## Session 2: Slot conflict detection
+
+### Prompt
+"Implement overlap/conflict detection for slot creation — two slots for the same provider overlap if one starts before the other ends."
+
+### What you got (initially wrong)
+The first draft tried to express the slot-end comparison entirely in the Prisma `where` clause using `AND: [{ startTime: { lt: end } }]`. This is incomplete because Prisma cannot compute `startTime + durationMinutes * 60000` inline — it cannot compare a computed column against a value.
+
+### What you corrected
+Split the check into two parts: (1) a Prisma query to find candidates whose `startTime < proposedEnd` (slot started before proposed slot ends), then (2) a JavaScript `.some()` filter to check whether each candidate's computed end time (`startTime + durationMinutes * 60s`) falls after the proposed start. This correctly catches all overlap cases with no false positives.
+
+---
+
+## Session 2: Test suite (auth + RBAC + slots)
+
+### Prompt
+"Write a comprehensive supertest test suite covering: register/login/me, slot create with RBAC, provider vs front-desk visibility, edit restrictions, archive/restore with RBAC, conflict detection, and 401/403/404 error paths."
+
+### What you got
+28 test cases grouped into 5 describe blocks. All 28 passed on first run against the live Neon PostgreSQL database. Cleanup afterAll deletes all test records ending in `@clinic.test`.
+
+### What you corrected
+Nothing required correction. All tests passed cleanly.
+

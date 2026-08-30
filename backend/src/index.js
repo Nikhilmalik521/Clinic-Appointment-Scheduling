@@ -6,11 +6,15 @@ dotenv.config();
 
 const app = express();
 
-// Middleware
+// ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(cors());
 app.use(express.json());
 
-// Health check endpoint
+// ─── Routes ───────────────────────────────────────────────────────────────────
+app.use('/api/auth', require('./routes/auth'));
+app.use('/api/slots', require('./routes/slots'));
+
+// ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -20,20 +24,23 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// 404 handler
+// ─── 404 handler ─────────────────────────────────────────────────────────────
 app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
-// Global error handler
+// ─── Global error handler ─────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ error: 'Internal server error' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Only start listening when run directly (not during tests)
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
 
 module.exports = app;
