@@ -27,6 +27,9 @@
    - `GET /api/appointments/:id/notes` — list visit notes (front-desk or associated provider)
    - `POST /api/appointments/:id/notes` — add note (provider only; must be scheduling or supporting)
    - `PUT /api/appointments/note/:noteId` — edit note (author only)
+   - `GET /api/appointments` *(upgraded)* — search (`?search=`), filter (`?providerId=`, `?status=`, `?dateFrom=`, `?dateTo=`), sort (`?sortBy=`, `?sortOrder=`), paginate (`?page=`, `?pageSize=`); all DB-side
+   - `POST /api/slots/bulk` — front-desk only; generate recurring slots across a date range; returns `{ created, skipped }`
+   - `GET /api/schedule/export` — single-day CSV export (`?date=YYYY-MM-DD&providerId=`); RFC 4180 CSV, RBAC-scoped
 3. **Database (Persistence)**: PostgreSQL hosted on Neon, managed through the Prisma ORM tool. It handles foreign key checks, uniqueness constraints, and stores data transactionally.
 
 **Communication**:

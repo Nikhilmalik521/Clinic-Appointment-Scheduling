@@ -131,3 +131,42 @@ The test helper used `Date.now() + 24h` as a fixed start time for every slot. Mu
 
 ### What you corrected
 Added a module-level monotonic counter. Each `createSlot` call now uses `24 + counter * 2` hours from now, giving every slot a distinct 2-hour window. Production conflict-detection logic was not changed.
+
+---
+
+## Session 4: Search, filter, sort, paginate GET /api/appointments
+
+### Prompt
+"Upgrade GET /api/appointments with server-side search by patient name, filters by provider/status/date-range, sorting by date/status/providerName, and pagination with total count. No client-side filtering."
+
+### What you got
+Replaced the simple `findMany` with a Prisma `$transaction([findMany, count])` query. Search uses `{ contains: ..., mode: 'insensitive' }`. Status accepts comma-separated values mapped to `{ in: [...] }`. Date filters use `{ gte: }` / `{ lte: }`. Sort by providerName uses `{ provider: { name: order } }`. Pagination uses `skip` + `take` with capped `pageSize` of 100.
+
+### What you corrected
+Nothing required correction. All 19 search/filter/sort/pagination tests passed on first run.
+
+---
+
+## Session 4: Bulk slot generation
+
+### Prompt
+"Create POST /api/slots/bulk that generates recurring slots across a date range for a provider, returning which slots were created and which were skipped due to conflicts."
+
+### What you got
+`POST /api/slots/bulk` (front-desk only) accepts `startDate`, `endDate`, `startHour`, `endHour`, `durationMinutes`, `intervalMinutes`, `daysOfWeek`. Iterates day by day, generates slot start times as a minuteOffset loop, checks each with `hasConflict()`, creates or records as skipped. Returns `{ summary, created, skipped }`.
+
+### What you corrected
+Nothing required correction. Bulk generation and conflict-skipping tests passed first run.
+
+---
+
+## Session 4: CSV export
+
+### Prompt
+"Create GET /api/schedule/export?date=&providerId= that returns a single-day schedule as a CSV file. No extra npm packages."
+
+### What you got
+`src/routes/schedule.js` that filters slots by day using UTC `T00:00:00.000Z` / `T23:59:59.999Z` boundaries. Builds CSV string manually with an RFC 4180-compliant `escape()` helper (wraps in double-quotes, escapes internal quotes). Sets `Content-Type: text/csv` and `Content-Disposition: attachment` headers.
+
+### What you corrected
+Nothing required correction. All 6 CSV tests passed first run.

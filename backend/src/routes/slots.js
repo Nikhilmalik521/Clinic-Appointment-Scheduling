@@ -276,4 +276,117 @@ router.post('/:id/restore', authenticate, authorize('front-desk'), async (req, r
   }
 });
 
+// ─── POST /api/slots/bulk — Bulk recurring availability generation ─────────────
+// Front-desk only. Generates slots across a date range on specified days.
+//
+// Body:
+//   providerId      {string}   required
+//   startDate       {string}   ISO date, e.g. "2024-02-01"
+//   endDate         {string}   ISO date, inclusive
+//   startHour       {number}   0–23  first slot start hour each day (e.g. 9)
+//   endHour         {number}   0–23  last slot MAY start at this hour (e.g. 17)
+//   durationMinutes {number}   slot length in minutes (e.g. 30)
+//   intervalMinutes {number}   minutes between slot starts (e.g. 30 = back-to-back)
+//   daysOfWeek      {number[]} 0=Sun…6=Sat (default: [1,2,3,4,5] Mon–Fri)
+router.post('/bulk', authenticate, authorize('front-desk'), async (req, res) => {
+  try {
+    const {
+      providerId,
+      startDate,
+      endDate,
+      startHour,
+      endHour,
+      durationMinutes,
+      intervalMinutes,
+      daysOfWeek = [1, 2, 3, 4, 5],
+    } = req.body;
+
+    // ── Validation ────────────────────────────────────────────────────────────
+    const errors = [];
+    if (!providerId) errors.push('providerId is required');
+    if (!startDate) errors.push('startDate is required');
+    if (!endDate) errors.push('endDate is required');
+    if (startHour === undefined || startHour === null) errors.push('startHour is required');
+    if (endHour === undefined || endHour === null) errors.push('endHour is required');
+    if (!durationMinutes) errors.push('durationMinutes is required');
+    if (!intervalMinutes) errors.push('intervalMinutes is required');
+    if (errors.length) return res.status(400).json({ errors });
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (isNaN(start) || isNaN(end)) return res.status(400).json({ error: 'startDate/endDate must be valid dates' });
+    if (end < start) return res.status(400).json({ error: 'endDate must be on or after startDate' });
+    if (startHour < 0 || startHour > 23) return res.status(400).json({ error: 'startHour must be 0–23' });
+    if (endHour < 0 || endHour > 23) return res.status(400).json({ error: 'endHour must be 0–23' });
+    if (endHour < startHour) return res.status(400).json({ error: 'endHour must be >= startHour' });
+    if (intervalMinutes < durationMinutes) return res.status(400).json({ error: 'intervalMinutes must be >= durationMinutes to prevent overlaps' });
+
+    // Verify provider exists
+    const provider = await prisma.user.findUnique({ where: { id: providerId } });
+    if (!provider || provider.role !== 'provider') {
+      return res.status(400).json({ error: 'providerId must reference a valid provider account' });
+    }
+
+    const created = [];
+    const skipped = [];
+
+    // ── Iterate over each day in range ────────────────────────────────────────
+    const current = new Date(start);
+    current.setHours(0, 0, 0, 0);
+
+    while (current <= end) {
+      const dayOfWeek = current.getDay();
+
+      if (daysOfWeek.includes(dayOfWeek)) {
+        // ── Generate slots for this day ───────────────────────────────────────
+        let slotHour = parseInt(startHour);
+        let slotMinute = 0;
+
+        // Convert startHour to total minutes from midnight for easy arithmetic
+        let totalMinutes = parseInt(startHour) * 60;
+        const endTotalMinutes = parseInt(endHour) * 60;
+
+        while (totalMinutes <= endTotalMinutes) {
+          const slotStart = new Date(current);
+          slotStart.setHours(Math.floor(totalMinutes / 60), totalMinutes % 60, 0, 0);
+
+          const conflict = await hasConflict(providerId, slotStart, parseInt(durationMinutes));
+
+          if (conflict) {
+            skipped.push({
+              startTime: slotStart.toISOString(),
+              reason: 'Overlaps with an existing slot',
+            });
+          } else {
+            const slot = await prisma.slot.create({
+              data: {
+                providerId,
+                startTime: slotStart,
+                durationMinutes: parseInt(durationMinutes),
+                status: 'Available',
+              },
+              select: { id: true, startTime: true, durationMinutes: true, status: true },
+            });
+            created.push(slot);
+          }
+
+          totalMinutes += parseInt(intervalMinutes);
+        }
+      }
+
+      // Advance to next day
+      current.setDate(current.getDate() + 1);
+    }
+
+    res.status(201).json({
+      summary: { created: created.length, skipped: skipped.length },
+      created,
+      skipped,
+    });
+  } catch (err) {
+    console.error('Bulk slot generation error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 module.exports = router;

@@ -16,6 +16,7 @@ app.use('/api/slots', require('./routes/slots'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/appointments', require('./routes/careTeam'));
 app.use('/api/appointments', require('./routes/notes'));
+app.use('/api/schedule', require('./routes/schedule'));
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/api/health', (req, res) => {

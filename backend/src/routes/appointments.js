@@ -49,40 +49,129 @@ function canAccess(user, slot) {
   return false;
 }
 
-// ─── GET /api/appointments — List appointments visible to the caller ───────────
+// ─── GET /api/appointments — Search, filter, sort and paginate ───────────────
+// Query params:
+//   search=<string>      — patient name partial match (case-insensitive)
+//   providerId=<uuid>    — filter by scheduling provider
+//   status=<string>      — filter by status (comma-separated for multiple)
+//   dateFrom=<ISO>       — appointments starting on or after this date
+//   dateTo=<ISO>         — appointments starting on or before this date
+//   sortBy=startTime|status|providerName  (default: startTime)
+//   sortOrder=asc|desc   (default: asc)
+//   page=<int>           (default: 1)
+//   pageSize=<int>       (default: 20, max: 100)
 router.get('/', authenticate, async (req, res) => {
   try {
-    let where = {};
+    const {
+      search,
+      providerId,
+      status,
+      dateFrom,
+      dateTo,
+      sortBy = 'startTime',
+      sortOrder = 'asc',
+      page = '1',
+      pageSize = '20',
+    } = req.query;
 
+    // ── Pagination ────────────────────────────────────────────────────────────
+    const pageNum = Math.max(1, parseInt(page) || 1);
+    const size = Math.min(100, Math.max(1, parseInt(pageSize) || 20));
+    const skip = (pageNum - 1) * size;
+
+    // ── Validate sortOrder ────────────────────────────────────────────────────
+    const order = sortOrder === 'desc' ? 'desc' : 'asc';
+
+    // ── Build orderBy ─────────────────────────────────────────────────────────
+    let orderBy;
+    if (sortBy === 'providerName') {
+      orderBy = { provider: { name: order } };
+    } else if (sortBy === 'status') {
+      orderBy = { status: order };
+    } else {
+      orderBy = { startTime: order };
+    }
+
+    // ── Base RBAC filter ──────────────────────────────────────────────────────
+    let baseWhere;
     if (req.user.role === 'provider') {
-      // Provider sees appointments where they are the scheduling OR supporting provider
-      where = {
+      baseWhere = {
         OR: [
           { providerId: req.user.id },
           { careTeam: { some: { providerId: req.user.id } } },
         ],
-        status: { not: 'Available' }, // only booked appointments
+        status: { not: 'Available' },
       };
     } else {
-      // Front-desk sees everything that has been requested (not bare Available slots)
-      where = { status: { not: 'Available' } };
+      baseWhere = { status: { not: 'Available' } };
     }
 
-    const appointments = await prisma.slot.findMany({
-      where,
-      include: {
-        provider: { select: { id: true, name: true, email: true } },
-        careTeam: { include: { provider: { select: { id: true, name: true, email: true } } } },
-      },
-      orderBy: { startTime: 'asc' },
-    });
+    // ── Additional filters ────────────────────────────────────────────────────
+    const andFilters = [];
 
-    res.json({ appointments, count: appointments.length });
+    if (search && search.trim()) {
+      andFilters.push({
+        patientName: { contains: search.trim(), mode: 'insensitive' },
+      });
+    }
+
+    if (providerId) {
+      andFilters.push({ providerId });
+    }
+
+    if (status) {
+      const statuses = status.split(',').map((s) => s.trim()).filter(Boolean);
+      if (statuses.length === 1) {
+        andFilters.push({ status: statuses[0] });
+      } else if (statuses.length > 1) {
+        andFilters.push({ status: { in: statuses } });
+      }
+    }
+
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      if (!isNaN(from)) andFilters.push({ startTime: { gte: from } });
+    }
+
+    if (dateTo) {
+      const to = new Date(dateTo);
+      if (!isNaN(to)) andFilters.push({ startTime: { lte: to } });
+    }
+
+    const where = andFilters.length > 0
+      ? { AND: [baseWhere, ...andFilters] }
+      : baseWhere;
+
+    // ── Query with count ──────────────────────────────────────────────────────
+    const [appointments, total] = await prisma.$transaction([
+      prisma.slot.findMany({
+        where,
+        include: {
+          provider: { select: { id: true, name: true, email: true } },
+          careTeam: { include: { provider: { select: { id: true, name: true, email: true } } } },
+        },
+        orderBy,
+        skip,
+        take: size,
+      }),
+      prisma.slot.count({ where }),
+    ]);
+
+    res.json({
+      appointments,
+      pagination: {
+        total,
+        page: pageNum,
+        pageSize: size,
+        totalPages: Math.ceil(total / size),
+      },
+    });
   } catch (err) {
     console.error('List appointments error:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 // ─── GET /api/appointments/:id — Single appointment ──────────────────────────
 router.get('/:id', authenticate, async (req, res) => {
