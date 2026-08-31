@@ -3,7 +3,7 @@
 ## Links
 
 - **GitHub repository:** https://github.com/Nikhilmalik521/Clinic-Appointment-Scheduling
-- **Live application:** `<to be filled after deployment>`
+- **Live application:** https://clinic-appointment-scheduling-tau.vercel.app
 
 ## Notes for the reviewer
 
