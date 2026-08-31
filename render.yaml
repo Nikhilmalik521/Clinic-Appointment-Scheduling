@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: clinic-scheduling-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install --no-audit --no-fund && npx prisma generate && npx prisma db push --accept-data-loss
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false          # You supply this in the Render dashboard
+      - key: JWT_SECRET
+        sync: false          # You supply this in the Render dashboard
+      - key: FRONTEND_URL
+        sync: false          # Set to your Vercel URL after deploying frontend
+      - key: NODE_ENV
+        value: production

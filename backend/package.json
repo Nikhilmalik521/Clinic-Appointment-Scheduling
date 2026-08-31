@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "seed": "node src/seed.js",
+    "postinstall": "prisma generate",
     "test": "jest --runInBand --forceExit",
     "test:watch": "jest --watch"
   },
@@ -26,6 +27,9 @@
     "nodemon": "^3.1.0",
     "prisma": "^5.10.0",
     "supertest": "^7.2.2"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "jest": {
     "testEnvironment": "node",
