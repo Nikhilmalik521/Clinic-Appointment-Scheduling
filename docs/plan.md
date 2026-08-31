@@ -29,7 +29,7 @@ This order ensures that any backend-enforced constraints are verified early, pre
 - **Session 2**: Estimated 2 hours. Actual: ~1.5 hours (auth + RBAC + slot CRUD + 28 passing tests).
 - **Session 3**: Estimated 2.5 hours. Actual: ~2 hours (lifecycle state machine + care team + visit notes + 35 passing tests; extra time fixing slot-conflict bug in test fixtures).
 - **Session 4**: Estimated 2 hours. Actual: ~1.5 hours (search/filter/sort/pagination + bulk generation + CSV export + 29 passing tests — all passed first run).
-- **Session 5**: Estimated 2 hours. Actual: 
+- **Session 5**: Estimated 2 hours. Actual: ~1.5 hours (alerts + dismissal + reappearance logic + dashboard metrics + no-show rate + audit log immutability + 34 passing tests — all passed first run).
 - **Session 6**: Estimated 1.5 hours. Actual: 
 
 ### What did you cut when you ran short?

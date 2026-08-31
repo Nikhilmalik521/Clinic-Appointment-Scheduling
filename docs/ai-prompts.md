@@ -170,3 +170,42 @@ Nothing required correction. Bulk generation and conflict-skipping tests passed 
 
 ### What you corrected
 Nothing required correction. All 6 CSV tests passed first run.
+
+---
+
+## Session 5: Alerts with dismissal and 1-hour reappearance rule
+
+### Prompt
+"Add unconfirmed appointment alerts when status is Requested and scheduled time is within 24h. Allow front desk to dismiss alerts. If still Requested within 1 hour of appointment, the alert must reappear despite previous dismissal."
+
+### What you got
+`src/routes/alerts.js` with GET /api/alerts, GET /api/alerts/count, POST /api/alerts/:slotId/dismiss. The reappearance rule is a pure stateless runtime computation via `computeActiveAlerts()`: candidates are fetched from DB, dismissals are fetched, then JS filters — any slot within 1h of start always passes through regardless of dismissal row. The function is exported for direct unit testing without any DB calls.
+
+### What you corrected
+Nothing required correction. All 18 alert tests (5 pure unit + 13 HTTP) passed first run.
+
+---
+
+## Session 5: Dashboard metrics and weekly no-show rate
+
+### Prompt
+"Build dashboard metrics: appointments today, currently checked-in, no-shows this week, upcoming confirmed, breakdown by provider and status, weekly no-show rate for last 8 weeks."
+
+### What you got
+`src/routes/dashboard.js` with GET /api/dashboard (uses Promise.all with 6 parallel Prisma queries: count, groupBy) and GET /api/dashboard/no-show-rate (loops 8 weeks using UTC week boundary helpers, runs 2 queries per week). No-show rate is `noShows / total * 100` rounded to 1 decimal.
+
+### What you corrected
+Nothing required correction. All 12 dashboard tests passed first run.
+
+---
+
+## Session 5: Audit log immutability
+
+### Prompt
+"Ensure audit/history records are append-only and cannot be edited or deleted."
+
+### What you got
+The existing GET /api/appointments/:id/history returns records in chronological order. No PUT, PATCH, or DELETE route is registered for audit log entries at any path, so attempts return 404 from Express. Tests explicitly verify that PUT and DELETE to /history/:id return 404. Each event's `performedBy`, `eventType`, `eventData`, and `createdAt` are verified.
+
+### What you corrected
+Nothing required correction. All 6 audit immutability tests passed first run.

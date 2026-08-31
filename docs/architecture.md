@@ -30,6 +30,12 @@
    - `GET /api/appointments` *(upgraded)* — search (`?search=`), filter (`?providerId=`, `?status=`, `?dateFrom=`, `?dateTo=`), sort (`?sortBy=`, `?sortOrder=`), paginate (`?page=`, `?pageSize=`); all DB-side
    - `POST /api/slots/bulk` — front-desk only; generate recurring slots across a date range; returns `{ created, skipped }`
    - `GET /api/schedule/export` — single-day CSV export (`?date=YYYY-MM-DD&providerId=`); RFC 4180 CSV, RBAC-scoped
+   - `GET /api/alerts` — front-desk only; active alerts (Requested within 24h); dismissal-aware with 1h reappearance rule
+   - `GET /api/alerts/count` — front-desk badge count
+   - `POST /api/alerts/:slotId/dismiss` — dismiss alert; auto-reappears in critical 1h window regardless
+   - `GET /api/dashboard` — front-desk metrics: today's appts, checked-in, no-shows this week, upcoming confirmed, by-status & by-provider breakdowns
+   - `GET /api/dashboard/no-show-rate` — weekly no-show rate for last 8 weeks
+   - `GET /api/appointments/:id/history` — immutable append-only audit log (no PUT/DELETE endpoints exist)
 3. **Database (Persistence)**: PostgreSQL hosted on Neon, managed through the Prisma ORM tool. It handles foreign key checks, uniqueness constraints, and stores data transactionally.
 
 **Communication**:
