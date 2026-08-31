@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
+    "seed": "node src/seed.js",
     "test": "jest --runInBand --forceExit",
     "test:watch": "jest --watch"
   },
