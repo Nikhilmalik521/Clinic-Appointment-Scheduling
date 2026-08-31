@@ -44,9 +44,14 @@
 
 ### Where does each piece run?
 
-- **Client (Frontend)**: Served statically from Vercel's global CDN and executes entirely in the user's web browser.
+- **Client (Frontend)**: React 19 + Vite SPA served statically from Vercel's global CDN. Executes entirely in the browser. Structure:
+  - `src/api/` — typed fetch wrappers for every backend endpoint (`client.js` handles token injection and error normalisation)
+  - `src/context/AuthContext.jsx` — JWT stored in localStorage, `me()` called on mount to restore session
+  - `src/pages/` — LoginPage, DashboardPage, AppointmentsPage, AppointmentDetailPage, SlotsPage, AlertsPage
+  - `src/components/` — Sidebar (with live alert badge poll), StatusBadge, Modal, Pagination, Spinner, EmptyState, NoShowChart (pure CSS bars)
+  - Dark-mode-first design system in `index.css` using CSS custom properties; no Tailwind or component library
 - **Web API Service (Backend)**: Runs inside a Docker container/Node runtime environment on Render.com's web services.
-- **Database**: Runs in a managed PostgreSQL instance provided by Supabase in the cloud.
+- **Database**: Runs in a managed PostgreSQL instance provided by Neon (dev) / Supabase (prod) in the cloud.
 
 ### What is the request path for one representative user action, end to end?
 

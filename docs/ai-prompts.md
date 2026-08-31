@@ -209,3 +209,47 @@ The existing GET /api/appointments/:id/history returns records in chronological 
 
 ### What you corrected
 Nothing required correction. All 6 audit immutability tests passed first run.
+
+---
+
+## Session 6: React frontend — design system and routing
+
+### Prompt
+"Build the complete React frontend using Vanilla CSS, modern and responsive, dark-mode-first. Connect the UI to all existing backend APIs. Implement login and role-based navigation."
+
+### What you got
+`src/index.css` — 600-line CSS-only design system with custom properties, glassmorphism cards, gradient buttons, animated status badges, sidebar layout, modal, timeline, and bar chart — no Tailwind or component library. `src/App.jsx` uses React Router v6 with a `RequireAuth` HOC that redirects unauthenticated users and enforces role-based access (front-desk → dashboard, provider → appointments). `AuthContext` stores the JWT in localStorage and calls `GET /api/auth/me` on mount to restore sessions.
+
+### What you corrected
+`client.js` was initially not saved to disk correctly (tool write appeared to succeed but file was missing on disk). Recreated it before the production build. Build then succeeded with 0 errors, 44 modules transformed.
+
+---
+
+## Session 6: All 6 pages
+
+### Prompt
+"Build dashboard, appointment list/search, scheduling/slots, appointment details, care team, visit notes and alerts views. Show proper loading, empty, success and error states."
+
+### What you got
+- **LoginPage**: Email/password form + one-click demo credential fill buttons for all 3 accounts.
+- **DashboardPage**: 4 metric cards (appointmentsToday, checkedIn, upcomingConfirmed, noShowsThisWeek), by-status and by-provider breakdown tables, 8-week no-show rate pure-CSS bar chart.
+- **AppointmentsPage**: Server-side search input, status/date-from/date-to filters, sortable column headers (▲▼), paginated table, row-click to detail.
+- **AppointmentDetailPage**: Info panel, role-aware transition buttons (Confirm/CheckIn/Complete/Cancel/NoShow), care team add/remove, visit notes add/edit (author-gated), append-only timeline with colour-coded dots.
+- **SlotsPage**: Slot table with edit/archive/restore, create-slot modal, bulk generation modal showing created+skipped summary, CSV download via Blob URL trigger.
+- **AlertsPage**: Alert cards with critical/normal highlight, locked dismiss button in 1h window, refresh button.
+
+### What you corrected
+Nothing required correction on first build.
+
+---
+
+## Session 6: Seed data
+
+### Prompt
+"Add realistic demo/seed data and demo credentials for both roles."
+
+### What you got
+`backend/src/seed.js` upserts 3 demo users (frontdesk@clinic.demo, smith@clinic.demo, jones@clinic.demo, all password Demo@1234) and creates 14 appointments spanning past/present/future in all statuses (CheckedIn, Confirmed, Requested, Available, Completed, NoShow, Cancelled) with audit log entries for each transition.
+
+### What you corrected
+Two field-name mismatches against the Prisma schema: `password` → `passwordHash` in the users array; `visitNote.create` needed the `slot: { connect }` relation syntax rather than bare `slotId`. Both fixed immediately.

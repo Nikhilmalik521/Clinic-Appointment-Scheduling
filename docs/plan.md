@@ -32,6 +32,8 @@ This order ensures that any backend-enforced constraints are verified early, pre
 - **Session 5**: Estimated 2 hours. Actual: ~1.5 hours (alerts + dismissal + reappearance logic + dashboard metrics + no-show rate + audit log immutability + 34 passing tests — all passed first run).
 - **Session 6**: Estimated 1.5 hours. Actual: 
 
+- **Session 6**: Estimated 1.5 hours. Actual: ~2 hours (complete React frontend, dark-mode CSS design system, 6 pages, 7 components, API client layer, AuthContext, seed data, production env templates, SUBMISSION.md — build passes, 0 errors).
+
 ### What did you cut when you ran short?
 
 - **TypeScript → JavaScript**: Dropped TypeScript for the backend in Session 1 to move faster. TypeScript would have added value in a larger team but adds overhead (tsconfig, type definitions) for a solo 12-hour project.
