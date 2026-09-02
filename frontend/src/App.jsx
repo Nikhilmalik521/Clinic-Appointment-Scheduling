@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Spinner from './components/Spinner';
 import LoginPage from './pages/LoginPage';
@@ -20,6 +21,8 @@ function RequireAuth({ children, role }) {
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   if (loading) return <Spinner />;
 
   if (!user) return (
@@ -30,8 +33,24 @@ function AppRoutes() {
 
   return (
     <div className="app-layout">
-      <Sidebar />
-      <main className="main-content">
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      <main className={`main-content${sidebarOpen ? ' sidebar-is-open' : ''}`}>
+        {/* Mobile top navbar */}
+        <div className="mobile-navbar">
+          <button
+            className="hamburger-btn"
+            onClick={() => setSidebarOpen(prev => !prev)}
+            aria-label="Toggle menu"
+          >
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+            <span className="hamburger-bar" />
+          </button>
+          <div className="mobile-brand">
+            <span>🏥</span> ClinicScheduler
+          </div>
+        </div>
+
         <Routes>
           <Route path="/" element={<Navigate to={user.role === 'front-desk' ? '/dashboard' : '/appointments'} replace />} />
           <Route path="/dashboard" element={

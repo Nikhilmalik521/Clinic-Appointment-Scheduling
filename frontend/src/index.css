@@ -101,6 +101,7 @@ label {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: margin-left var(--transition);
 }
 
 .page-body {
@@ -118,8 +119,82 @@ label {
   top: 0; left: 0; bottom: 0;
   display: flex;
   flex-direction: column;
-  z-index: 100;
-  transition: transform var(--transition);
+  z-index: 300;
+  transition: transform 0.25s ease;
+}
+
+/* Sidebar overlay (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  z-index: 299;
+  animation: fade-in 0.2s ease;
+}
+
+/* Close button inside sidebar — hidden on desktop */
+.sidebar-close-btn {
+  display: none;
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+  transition: color var(--transition), background var(--transition);
+}
+.sidebar-close-btn:hover { color: var(--text-primary); background: var(--border); }
+
+/* ── Mobile top navbar ────────────────────────────────────────────────── */
+.mobile-navbar {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  height: var(--navbar-h);
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 200;
+}
+
+.mobile-brand {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.hamburger-btn {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition);
+  flex-shrink: 0;
+}
+.hamburger-btn:hover { background: var(--border); }
+
+.hamburger-bar {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: all 0.2s ease;
 }
 
 .sidebar-brand {
@@ -371,6 +446,8 @@ label {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  overflow-x: auto; /* horizontal scroll on small screens */
+  -webkit-overflow-scrolling: touch;
 }
 
 table { width: 100%; border-collapse: collapse; }
@@ -834,3 +911,74 @@ tbody tr:last-child td { border-bottom: none; }
 }
 .tag-fd  { background: var(--primary-muted); color: var(--primary-hover); }
 .tag-prov { background: var(--accent-muted); color: var(--accent); }
+
+/* ── Responsive breakpoints ───────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* Show mobile navbar */
+  .mobile-navbar { display: flex; }
+
+  /* Show sidebar close button */
+  .sidebar-close-btn { display: block; }
+
+  /* Slide sidebar off-screen by default */
+  .sidebar {
+    transform: translateX(-100%);
+    box-shadow: none;
+  }
+
+  /* Slide it in when open */
+  .sidebar.sidebar-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow-lg);
+  }
+
+  /* Show overlay only when sidebar is open */
+  .sidebar.sidebar-open ~ .sidebar-overlay,
+  .sidebar-overlay { display: block; }
+
+  /* Remove desktop left margin */
+  .main-content {
+    margin-left: 0;
+  }
+
+  /* Tighten page padding on small screens */
+  .page-body {
+    padding: 1.25rem 1rem;
+  }
+
+  /* Stack search bar vertically */
+  .search-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Shrink metric values a bit */
+  .metric-value { font-size: 1.4rem; }
+
+  /* Page header stacks on mobile */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  /* Info label narrower */
+  .info-label { width: 120px; }
+
+  /* Modal fills more of the screen */
+  .modal { padding: 1.25rem; }
+
+  /* Login card padding reduced */
+  .login-card { padding: 1.5rem; }
+}
+
+@media (max-width: 480px) {
+  .page-body { padding: 1rem 0.75rem; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .metric-card { padding: 1rem; }
+  .metric-value { font-size: 1.25rem; }
+  .btn-group { flex-direction: column; }
+  .transition-btns { flex-direction: column; }
+  .detail-grid { grid-template-columns: 1fr; }
+  .info-label { width: 100px; font-size: 0.78rem; }
+}
+
